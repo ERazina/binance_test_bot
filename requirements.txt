@@ -1,3 +1,4 @@
 python-binance
+pybit
 pandas
 python-dotenv
