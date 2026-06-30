@@ -2,9 +2,8 @@
 # -*- coding: utf-8 -*-
 
 """
-🤖 Crypto Trading Bot – Универсальный
+🤖 Crypto Trading Bot – с SL и TP
 Поддерживает Binance Testnet и Bybit Testnet.
-Выбор биржи через переменную окружения EXCHANGE.
 """
 
 import os
@@ -21,6 +20,7 @@ EXCHANGE = os.getenv('EXCHANGE', 'binance').lower()
 SYMBOL = os.getenv('SYMBOL', 'BTCUSDT')
 QUANTITY = float(os.getenv('QUANTITY', 0.001))
 STOP_LOSS = float(os.getenv('STOP_LOSS', 0.10))
+TAKE_PROFIT = float(os.getenv('TAKE_PROFIT', 0.15))  # <-- НОВАЯ ПЕРЕМЕННАЯ
 SLEEP_TIME = int(os.getenv('SLEEP_TIME', 120))
 
 print(f"🚀 Запуск бота...")
@@ -28,6 +28,7 @@ print(f"📊 Биржа: {EXCHANGE}")
 print(f"📈 Торгуем: {SYMBOL}")
 print(f"⚖️ Размер сделки: {QUANTITY}")
 print(f"🛑 Стоп-лосс: {STOP_LOSS * 100}%")
+print(f"🎯 Тейк-профит: {TAKE_PROFIT * 100}%")  # <-- НОВЫЙ ВЫВОД
 
 # ============================================
 # 2. ВЫБОР БИРЖИ И ПОДКЛЮЧЕНИЕ
@@ -77,7 +78,6 @@ elif EXCHANGE == 'bybit':
     
     try:
         session = HTTP(testnet=True, api_key=API_KEY, api_secret=API_SECRET)
-        # ИСПРАВЛЕНО: правильный метод для проверки соединения
         session.get_server_time()
         print("✅ Подключение к Bybit Testnet установлено")
     except Exception as e:
@@ -120,7 +120,7 @@ def calculate_signal(df):
     return 0
 
 # ============================================
-# 4. ОСНОВНОЙ ЦИКЛ
+# 4. ОСНОВНОЙ ЦИКЛ (С SL И TP)
 # ============================================
 
 def main():
@@ -143,25 +143,35 @@ def main():
             
             print(f"📊 Цена: {current_price:.2f} | Сигнал: {signal} | В позиции: {in_position}")
             
-            # Стоп-лосс
+            # --- УПРАВЛЕНИЕ РИСКАМИ: SL и TP ---
             if in_position and entry_price > 0:
                 pnl = (current_price - entry_price) / entry_price
+                
+                # Проверяем Stop-Loss (-10%)
                 if pnl < -STOP_LOSS:
-                    print(f"🛑 СТОП-ЛОСС! Продажа по {current_price:.2f}")
+                    print(f"🛑 СТОП-ЛОСС! Продажа по {current_price:.2f} (убыток {pnl*100:.1f}%)")
+                    place_order('SELL')
+                    in_position = False
+                    entry_price = 0.0
+                    time.sleep(SLEEP_TIME)
+                    continue
+                
+                # Проверяем Take-Profit (+15%)
+                if pnl > TAKE_PROFIT:
+                    print(f"🎯 ТЕЙК-ПРОФИТ! Продажа по {current_price:.2f} (прибыль {pnl*100:.1f}%)")
                     place_order('SELL')
                     in_position = False
                     entry_price = 0.0
                     time.sleep(SLEEP_TIME)
                     continue
             
-            # Сигнал на покупку
+            # --- СИГНАЛЫ НА ВХОД И ВЫХОД ---
             if signal == 1 and not in_position:
                 print(f"📈 Сигнал на покупку по {current_price:.2f}")
                 place_order('BUY')
                 in_position = True
                 entry_price = current_price
             
-            # Сигнал на продажу
             elif signal == -1 and in_position:
                 print(f"📉 Сигнал на продажу по {current_price:.2f}")
                 place_order('SELL')

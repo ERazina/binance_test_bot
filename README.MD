@@ -38,7 +38,7 @@
 ### Шаг 1: Клонируй репозиторий
 
 ```bash
-git clone https://github.com/your-username/your-repo-name.git
+git clone https://github.com/ERazina/binance_test_bot.git
 cd your-repo-name
 ```
 
@@ -57,3 +57,15 @@ python3 bot.py
 ```
 
 ### стратегия с sma5 и sma20 для BTC и ETH на момент июнь 2026 года
+
+### 🤝 Вклад в проект
+
+## Буду рада любым улучшениям. Создавайте Pull Request или Issue для обсуждения изменений.
+
+### Лицензия
+
+## Проект распространяется под лицензией MIT.
+
+### Контакты
+
+Если есть вопросы по настройке или запуску — создавай Issue или свяжись со мной через Telegram.
